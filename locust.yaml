@@ -24,6 +24,10 @@
        delay: 10
        tags: create
 
+     - name: Put this project in a Relax Security Context
+       command: oadm policy add-scc-to-user anyuid --namespace {{ locust_namespace }} --serviceaccount default
+       tags: create
+
      - name: Create a New Build based on image{{ ':' }} {{ docker_image }}
        command: oc new-build {{ docker_image }} --name=locust --binary=true --namespace {{ locust_namespace }}
        tags: create
