@@ -1,0 +1,41 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Locust{{ ":" }} LATAM Red Hat Forum 2016
+  hosts: localhost
+  connection: local
+  vars:
+     openshift_domain: example.com
+     openshift_domain_cloudapps: cloudapps.{{ openshift_domain }}
+     username: demo
+     password: r3dh4t1!
+     locust_namespace: locust
+     docker_image: ubuntu:14.04
+  tasks: 
+     - name: Delete any existing namespaces 
+       command: oc delete project {{ locust_namespace }} 
+       ignore_errors: True
+       tags: create
+
+     - name: Creating the Project{{ ':' }} {{ locust_namespace }} 
+       command: oadm new-project {{ locust_namespace }} --display-name="Locust{{ ":" }} LATAM Red Hat Forum 2016" --admin={{ username }} 
+       register: create_namespace
+       until: create_namespace.rc == 0
+       retries: 10
+       delay: 10
+       tags: create
+
+     - name: Create a New Build based on image{{ ':' }} {{ docker_image }}
+       command: oc new-build {{ docker_image }} --name=locust --binary=true --namespace {{ locust_namespace }}
+       tags: create
+
+     - name: Start a New Build based on a Dockerfile{{ ':' }}} templates/image
+       command: oc start-build locust --from-dir=templates/image --follow=true --wait=true --namespace {{ locust_namespace }}
+       tags: create
+
+     - name: Create a New Application based on a Image built
+       command: oc new-app locust --namespace {{ locust_namespace }}
+       tags: create
+
+     - name: Expose a Route{{ ':' }} locust.{{ openshift_domain_cloudapps }}
+       command: oc expose service/locust --hostname=locust.{{ openshift_domain_cloudapps }} --namespace {{ locust_namespace }}
+       tags: create
