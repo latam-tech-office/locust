@@ -9,7 +9,7 @@
      username: demo
      password: r3dh4t1!
      locust_namespace: locust
-     docker_image: ubuntu:14.04
+     docker_image: hakobera/locust:latest
   tasks: 
      - name: Delete any existing namespaces 
        command: oc delete project {{ locust_namespace }} 
@@ -29,7 +29,7 @@
        tags: create
 
      - name: Create a New Build based on image{{ ':' }} {{ docker_image }}
-       command: oc new-build {{ docker_image }} --name=locust --binary=true --namespace {{ locust_namespace }}
+       command: oc new-build {{ docker_image }} --name=locust --binary=true --namespace {{ locust_namespace }} --to locust
        tags: create
 
      - name: Start a New Build based on a Dockerfile{{ ':' }}} templates/image
@@ -41,5 +41,5 @@
        tags: create
 
      - name: Expose a Route{{ ':' }} locust.{{ openshift_domain_cloudapps }}
-       command: oc expose service/locust --hostname=locust.{{ openshift_domain_cloudapps }} --namespace {{ locust_namespace }}
+       command: oc expose service/locust --hostname=locust.{{ openshift_domain_cloudapps }} --namespace {{ locust_namespace }} --port 8089
        tags: create
